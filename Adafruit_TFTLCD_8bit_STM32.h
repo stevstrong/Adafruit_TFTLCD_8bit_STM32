@@ -81,7 +81,7 @@
 #define write8(c) { TFT_DATA->regs->BSRR = (((c^0xFF)<<16) | (c))<<TFT_DATA_NIBBLE; WR_STROBE; }
 
 extern uint8_t read8_(void);
-#define read8(x) { x = read8_() }
+#define read8(x) ( x = read8_() )
 
 // set the pins to output mode
 // not required to mask and assign, because all pins of bus are set together
