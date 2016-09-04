@@ -148,9 +148,9 @@ void loop()
 		// x, y (in pixels) can be directly used for display routines!
 
 		if (p.y < BOX_Y) {
-			// recover old box
+			// recover old box frame
 			tft.drawRect(old_x, 0, BOX_X, BOX_Y, oldcolor);
-			// draw white box frame for the new color
+			// draw white box frame for the new colour
 			if (p.x > X_BLACK) {
 				currentcolor = BLACK;
 				current_x = X_BLACK;
@@ -176,7 +176,7 @@ void loop()
 				currentcolor = WHITE;
 				current_x = X_WHITE;
 			}
-			tft.drawRect(current_x, 0, BOX_X, BOX_Y, BLACK);
+			tft.drawRect(current_x, 0, BOX_X, BOX_Y, (currentcolor^0xFFFF));
 			
 			oldcolor = currentcolor;
 			old_x = current_x;
