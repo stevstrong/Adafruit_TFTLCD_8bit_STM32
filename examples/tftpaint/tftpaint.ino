@@ -1,6 +1,8 @@
-// Paint example specifically for the TFTLCD breakout board.
-// If using the Arduino shield, use the tftpaint_shield.pde sketch instead!
-// DOES NOT CURRENTLY WORK ON ARDUINO LEONARDO
+// Paint example for a LCD board with touch screen.
+// Includes touch calibration feature.
+// Uses simple touch to select point, colour.
+// Uses double click/touch to clear the background in selected colour.
+// Uses double click/touch to set paint radius back to original value.
 
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
@@ -23,8 +25,9 @@ Adafruit_TFTLCD_8bit_STM32 tft;
 
 #define BOX_X 30
 #define BOX_Y 40
-//#define PENRADIUS 3
+
 int penradius;
+
 // test colours
 #define X_WHITE		0
 #define X_YELLOW	(BOX_X)
@@ -51,7 +54,6 @@ int old_x, current_x;
 
 TouchScreen ts = TouchScreen(XP, YP, XM, YM);
 
-char str[250];	// used for sprintf
 /*****************************************************************************/
 void setup(void)
 {
@@ -84,7 +86,8 @@ do {
 }  while (identifier == 0);
 
   tft.begin(identifier);
-	// Touch screen range
+ 
+	// Touch screen range setting
 	// set display X and Y range of the display screen
 	// the returned coordinates will be automatically mapped to these values.
 	// If this is not used, the default values form the header file are used.
@@ -123,12 +126,12 @@ do {
 	tft.fillRect(X_RED, 0, BOX_X, BOX_Y, RED);
 	tft.fillRect(X_BLUE, 0, BOX_X, BOX_Y, BLUE);
 	tft.fillRect(X_BLACK, 0, BOX_X, BOX_Y, BLACK);
-  
+
   currentcolor = oldcolor = WHITE;
   current_x = old_x = X_WHITE;
   tft.drawRect(X_WHITE, 0, BOX_X, BOX_Y, BLACK); // box selection
   penradius = 3;
- 
+
   pinMode(LED_PIN, OUTPUT);
 }
 
@@ -137,18 +140,12 @@ do {
 void loop()
 {
 	TSPoint p;	// a point object holds x, y and z coordinates
-/*
-  TSPoint p = ts.getPoint();
-*/
 
-  // we have some minimum pressure we consider 'valid'
-  // pressure of 0 means no pressing!
-  
+	// check for valid touch
 	if ( ts.getPoint(&p) ) { //  returns 'true' if touch is detected, otherwise 'false'
-		digitalWrite(LED_PIN, HIGH);
+		digitalWrite(LED_PIN, LOW);
 		// the coordinates will be mapped to the set display ranges by using 'rangeSet()' in setup
 		// x, y (in pixels) can be directly used for display routines!
-		//sprintf(str,"X = %4i, Y = %4i, P = %4i\n", p.x, p.y, p.z);	Serial.print(str);
 
 		if (p.y < BOX_Y) {
 			// recover old box
@@ -192,12 +189,13 @@ void loop()
 			else if (penradius<p.repeat) penradius = p.repeat;
 			tft.fillCircle(p.x, p.y, penradius, currentcolor);
 		} else if ( p.y<BOX_Y ) {
+			// colour selection area
 			if (p.dbl) {
-				// fill the writing area with current color
+				// fill the writing area with current colour
 				tft.fillRect(0, BOX_Y+PAINT_MARGIN, TFTWIDTH, TFTHEIGHT-BOX_Y-PAINT_MARGIN, currentcolor);
 			}
 		}
-		digitalWrite(LED_PIN, LOW);
+		digitalWrite(LED_PIN, HIGH);
 	}
 }
 
