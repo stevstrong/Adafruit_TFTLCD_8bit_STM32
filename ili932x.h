@@ -60,6 +60,6 @@ extern void ili932x_fillScreen(uint16_t color);
 extern void ili932x_drawPixel(int16_t x, int16_t y, uint16_t color);
 extern void ili932x_setRotation(uint8_t x);
 extern uint16_t ili932x_readPixel(int16_t x, int16_t y);
-
+extern void ili932x_invertDisplay(boolean i);
 
 #endif

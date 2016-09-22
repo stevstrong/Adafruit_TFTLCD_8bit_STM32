@@ -120,7 +120,7 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
   //Adafruit_TFTLCD_8bit_STM32(uint8_t cs, uint8_t cd, uint8_t wr, uint8_t rd, uint8_t rst);
   Adafruit_TFTLCD_8bit_STM32(void);
 
-  void     begin(uint16_t id = 0x9325);
+  void     begin(uint16_t id = 0x9328);
   void     drawPixel(int16_t x, int16_t y, uint16_t color);
   void     drawFastHLine(int16_t x0, int16_t y0, int16_t w, uint16_t color);
   void     drawFastVLine(int16_t x0, int16_t y0, int16_t h, uint16_t color);
@@ -132,10 +132,11 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
   void     setRotation(uint8_t x);
        // These methods are public in order for BMP examples to work:
   void     setAddrWindow(int x1, int y1, int x2, int y2);
-  void     pushColors(uint16_t *data, uint8_t len, boolean first);
+  void     invertDisplay(boolean i),
+			pushColors(uint16_t *data, int16_t len, boolean first),
+           drawBitmap(int16_t x, int16_t y, int16_t w, int16_t h, const uint16_t * bitmap);
 
-  uint16_t color565(uint8_t r, uint8_t g, uint8_t b),
-           readPixel(int16_t x, int16_t y),
+  uint16_t readPixel(int16_t x, int16_t y),
            readID(void);
 
  private:
@@ -149,6 +150,7 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
 
 };
 
+extern uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
 extern uint16_t readReg(uint8_t r);
 //extern void writeCommand(uint16_t c);
 extern void writeRegister8(uint8_t a, uint8_t d);

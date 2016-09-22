@@ -6,12 +6,11 @@
 
 
 #include "Adafruit_TFTLCD_8bit_STM32.h"
-//#include "pin_magic.h"
 
 #include "ili932x.h"
 
 static uint8_t rotation;
-
+static int _width, _height;
 /*****************************************************************************/
 static const uint16_t ILI932x_regValues[] = {
   ILI932X_START_OSC        , 0x0001, // Start oscillator
@@ -112,9 +111,10 @@ void ili932x_setAddrWindow(int x1, int y1, int x2, int y2)
      case 1:
 	  t  = y1;
       y1 = x1;
-      if (y2>(TFTWIDTH-1)) { y2 = (TFTWIDTH-1); }
+      //if (y2>(TFTWIDTH-1)) { y2 = (TFTWIDTH-1); }
 	  x1 = TFTWIDTH  - 1 - y2;
       y2 = x2;
+      //if (y2>(TFTWIDTH-1)) { y2 = (TFTWIDTH-1); }
       x2 = TFTWIDTH  - 1 - t;
       x  = x2;
       y  = y1;
@@ -133,7 +133,7 @@ void ili932x_setAddrWindow(int x1, int y1, int x2, int y2)
       t  = x1;
       x1 = y1;
       y1 = TFTHEIGHT - 1 - x2;
-      if (y2>(TFTWIDTH-1)) { y2 = (TFTWIDTH-1); }
+      //if (y2>(TFTWIDTH-1)) { y2 = (TFTWIDTH-1); }
 	  x2 = y2;
       y2 = TFTHEIGHT - 1 - t;
       x  = x1;
@@ -152,6 +152,7 @@ void ili932x_setAddrWindow(int x1, int y1, int x2, int y2)
 /*****************************************************************************/
 void ili932x_fillScreen(uint16_t color)
 {
+	//Serial.println("932x fill screen...");
     // For the 932X, a full-screen address window is already the default
     // state, just need to set the address pointer to the top-left corner.
     // Although we could fill in any direction, the code uses the current
@@ -194,19 +195,28 @@ void ili932x_drawPixel(int16_t x, int16_t y, uint16_t color)
 }
 
 /*****************************************************************************/
+void ili932x_invertDisplay(boolean i)
+{
+	//uint16_t r = readReg(ILI932X_GATE_SCAN_CTRL2);
+	//r = i ? (r&BIT0) : (r|BIT0);
+	writeRegister16(ILI932X_GATE_SCAN_CTRL2, i ? 1 : 0); // MADCTL
+}
+
+/*****************************************************************************/
 void ili932x_setRotation(uint8_t rot)
 {
-    uint16_t t, x2 = 0, y2 = 0;
-	rotation = rot;
-    switch(rot) {
-     default: t = 0x1030; x2 = TFTWIDTH-1; y2 = TFTHEIGHT-1; break;
-     case 1 : t = 0x1028; x2 = TFTHEIGHT-1; y2 = TFTWIDTH-1; break;
-     case 2 : t = 0x1000; x2 = TFTWIDTH-1; y2 = TFTHEIGHT-1; break;
-     case 3 : t = 0x1018; x2 = TFTHEIGHT-1; y2 = TFTWIDTH-1; break;
+    uint16_t t;
+	rotation = rot&3;
+    switch(rotation) {
+     default: t = 0x1030; _width = TFTWIDTH; _height = TFTHEIGHT; break;
+     case 1 : t = 0x1028; _width = TFTHEIGHT; _height = TFTWIDTH; break;
+     case 2 : t = 0x1000; _width = TFTWIDTH; _height = TFTHEIGHT; break;
+     case 3 : t = 0x1018; _width = TFTHEIGHT; _height = TFTWIDTH; break;
     }
     writeRegister16(ILI932X_ENTRY_MOD, t ); // MADCTL
+	//Serial.print("setRotation: w: "); Serial.print(_width-1);
     // For 932X, init default full-screen address window:
-    ili932x_setAddrWindow(0, 0, x2, y2);
+    ili932x_setAddrWindow(0, 0, _width-1, _height-1);
 }
 
 /*****************************************************************************/
@@ -216,17 +226,17 @@ uint16_t ili932x_readPixel(int16_t x, int16_t y)
     switch(rotation) {
      case 1:
       t = x;
-      x = TFTWIDTH  - 1 - y;
+      x = _width  - 1 - y;
       y = t;
       break;
      case 2:
-      x = TFTWIDTH  - 1 - x;
-      y = TFTHEIGHT - 1 - y;
+      x = _width  - 1 - x;
+      y = _height - 1 - y;
       break;
      case 3:
       t = x;
       x = y;
-      y = TFTHEIGHT - 1 - t;
+      y = _height - 1 - t;
       break;
     }
     writeRegister16(ILI932X_GRAM_HOR_AD, x);
