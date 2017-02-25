@@ -11,13 +11,8 @@
 #include "hx8347g.h"
 #include "hx8357x.h"
 
-
-// LCD controller chip identifiers
-#define ID_932X    0
-#define ID_7575    1
-#define ID_9341    2
-#define ID_HX8357D    3
-#define ID_UNKNOWN 0xFF
+gpio_reg_map * cntrlRegs;
+gpio_reg_map * dataRegs;
 
 /*****************************************************************************/
 // Constructor for shield (fixed LCD control lines)
@@ -25,74 +20,71 @@
 Adafruit_TFTLCD_8bit_STM32 :: Adafruit_TFTLCD_8bit_STM32(void)
 : Adafruit_GFX(TFTWIDTH, TFTHEIGHT)
 {
-  //Set command lines as output
-  //Note: CRH and CRL are both 32 bits wide
-  //Each pin is represented by 4 bits 0x3 (hex) sets that pin to O/P
-  TFT_CNTRL->regs->CRL = (TFT_CNTRL->regs->CRL & 0xFFFF0000) | 0x00003333;
-    CS_IDLE; // Set all control bits to HIGH (idle)
-    CD_DATA; // Signals are ACTIVE LOW
-    WR_IDLE;
-    RD_IDLE;
-/**/
-  //reset();
-  //set up 8 bit parallel port to write mode.
-  setWriteDir();
 }
 
 /*****************************************************************************/
 void Adafruit_TFTLCD_8bit_STM32::begin(uint16_t id)
 {
-  uint8_t i = 0;
+	reset();
 
-  reset();
-
-  if ((id == 0x9325) || (id == 0x9328)) {
-
-    driver = ID_932X;
-    ili932x_begin();
-
-  } else if (id == 0x9341) {
-
-    driver = ID_9341;
-    ili9341_begin();
-
-  } else if (id == 0x8357) {
-    // HX8357D
-    driver = ID_HX8357D;
-    hx8357x_begin();
-
-  } else if(id == 0x7575) {
-
-    driver = ID_7575;
-    hx8347g_begin();
-
-  } else {
-    driver = ID_UNKNOWN;
-  }
+	if ((id == 0x9325) || (id == 0x9328)) {
+		driver = ID_932X;
+		ili932x_begin();
+	} else if (id == 0x9341) {
+		driver = ID_9341;
+		ili9341_begin();
+	} else if (id == 0x8357) {
+		// HX8357D
+		driver = ID_HX8357D;
+		hx8357x_begin();
+	} else if(id == 0x7575) {
+		driver = ID_7575;
+		hx8347g_begin();
+	} else {
+		driver = ID_UNKNOWN;
+	}
 }
 
 /*****************************************************************************/
 void Adafruit_TFTLCD_8bit_STM32::reset(void)
 {
-  // toggle RST low to reset
-  if (TFT_RST > 0) {
-	pinMode(TFT_RST, OUTPUT);
-    digitalWrite(TFT_RST, HIGH);
-    delay(10);
-    digitalWrite(TFT_RST, LOW);
-    delay(10);
-    digitalWrite(TFT_RST, HIGH);
-    delay(100);
-  }
-/*
-  // Data transfer sync
-  CS_ACTIVE;
-  CD_COMMAND;
-  write8(0x00); write8(0x00);
-  for(uint8_t i=0; i<3; i++) WR_STROBE; // Three extra 0x00s
-  CS_IDLE;
+	cntrlRegs = TFT_CNTRL_PORT->regs;
+	dataRegs = TFT_DATA_PORT->regs;
+	//Set control lines as output
+	//cntrlRegs->CRL = (cntrlRegs->CRL & 0xFFFF0000) | 0x00003333;
+	pinMode(TFT_RD, OUTPUT);
+	pinMode(TFT_WR, OUTPUT);
+	pinMode(TFT_RS, OUTPUT);
+	pinMode(TFT_CS, OUTPUT);
+	CS_IDLE; // Set all control bits to HIGH (idle)
+	CD_DATA; // Signals are ACTIVE LOW
+	WR_IDLE;
+	RD_IDLE;
+/* testing PB4 - sometimes reserved by debug port, see http://www.stm32duino.com/viewtopic.php?f=35&t=1130&p=24289#p24289
+	pinMode(PB4, OUTPUT);
+	digitalWrite(PB4, HIGH);
+	while (1) {
+		CS_ACTIVE;
+		//WR_STROBE;
+		digitalWrite(PB4, LOW);
+		digitalWrite(PB4, HIGH);
+		CS_IDLE;
+		delay(1000);
+	}
 */
-  //WriteCmdData(0xB0, 0x0000);   //R61520 needs this to read ID
+	//set up 8 bit parallel port to write mode.
+	setWriteDir();
+
+	// toggle RST low to reset
+	if (TFT_RST > 0) {
+		pinMode(TFT_RST, OUTPUT);
+		digitalWrite(TFT_RST, HIGH);
+		delay(100);
+		digitalWrite(TFT_RST, LOW);
+		delay(100);
+		digitalWrite(TFT_RST, HIGH);
+		delay(100);
+	}
 }
 
 /*****************************************************************************/
@@ -100,15 +92,15 @@ void Adafruit_TFTLCD_8bit_STM32::reset(void)
 // Relevant to rect/screen fills and H/V lines.  Input coordinates are
 // assumed pre-sorted (e.g. x2 >= x1).
 /*****************************************************************************/
-void Adafruit_TFTLCD_8bit_STM32::setAddrWindow(int x1, int y1, int x2, int y2)
+void Adafruit_TFTLCD_8bit_STM32::setAddrWindow(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
-  if(driver == ID_932X) {
-	  ili932x_setAddrWindow(x1, y1, x2, y2);
-  } else if(driver == ID_7575) {
-	hx8347g_setAddrWindow(x1, y1, x2, y2);
-  } else if ((driver == ID_9341) || (driver == ID_HX8357D)){
-	ili9341_setAddrWindow(x1, y1, x2, y2);
-  }
+	if(driver == ID_932X) {
+		ili932x_setAddrWindow(x1, y1, x2, y2);
+	} else if(driver == ID_7575) {
+		hx8347g_setAddrWindow(x1, y1, x2, y2);
+	} else if ((driver == ID_9341) || (driver == ID_HX8357D)){
+		ili9341_setAddrWindow(x1, y1, x2, y2);
+	}
 }
 
 /*****************************************************************************/
@@ -122,13 +114,11 @@ void Adafruit_TFTLCD_8bit_STM32::flood(uint16_t color, uint32_t len)
   uint8_t  i, hi = color >> 8,
               lo = color;
 
-  CS_ACTIVE;
-  CD_COMMAND;
+	CS_ACTIVE_CD_COMMAND;
   if (driver == ID_9341) {
-    write8(ILI9341_MEMORYWRITE);
+    writeCommand(ILI9341_MEMORYWRITE); // 16 bit
   } else if (driver == ID_932X) {
-    write8(0x00); // High command byte must be 0
-    write8(ILI932X_RW_GRAM);
+    writeCommand(ILI932X_RW_GRAM); // 16 bit
   } else if (driver == ID_HX8357D) {
     write8(HX8357_RAMWR);
   } else {
@@ -153,10 +143,10 @@ void Adafruit_TFTLCD_8bit_STM32::flood(uint16_t color, uint32_t len)
       } while(--i);
     }
     // Fill any remaining pixels (1 to 64)
-    for(i = (uint8_t)len & 63; i--; ) {
-      WR_STROBE;
-      WR_STROBE;
-    }
+	i = len & 63;
+    while (i--) {
+		WR_STROBE; WR_STROBE;
+	}
   } else {
     while(blocks--) {
       i = 16; // 64 pixels/block / 4 pixels/pass
@@ -165,9 +155,9 @@ void Adafruit_TFTLCD_8bit_STM32::flood(uint16_t color, uint32_t len)
         write8(hi); write8(lo); write8(hi); write8(lo);
       } while(--i);
     }
-    for(i = (uint8_t)len & 63; i--; ) {
-      write8(hi);
-      write8(lo);
+	i = len & 63;
+    while (i--) { // write here the remaining data
+      write8(hi); write8(lo);
     }
   }
   CS_IDLE;
@@ -225,6 +215,7 @@ void Adafruit_TFTLCD_8bit_STM32::drawFastVLine(int16_t x, int16_t y, int16_t len
 /*****************************************************************************/
 void Adafruit_TFTLCD_8bit_STM32::fillRect(int16_t x1, int16_t y1, int16_t w, int16_t h, uint16_t fillcolor)
 {
+	//Serial.println("\n::fillRect...");
   int16_t  x2, y2;
 
   // Initial off-screen clipping
@@ -251,7 +242,7 @@ void Adafruit_TFTLCD_8bit_STM32::fillRect(int16_t x1, int16_t y1, int16_t w, int
   setAddrWindow(x1, y1, x2, y2);
   flood(fillcolor, (uint32_t)w * (uint32_t)h);
   if(driver == ID_932X) setAddrWindow(0, 0, _width - 1, _height - 1);
-  else                  hx8347g_setLR();
+  //else                  hx8347g_setLR();
 }
 
 /*****************************************************************************/
@@ -362,6 +353,10 @@ void Adafruit_TFTLCD_8bit_STM32::pushColors(uint16_t *data, int16_t len, boolean
 void Adafruit_TFTLCD_8bit_STM32::invertDisplay(boolean i)
 {
 	if ( driver==ID_932X ) ili932x_invertDisplay(i);
+	else if ( driver==ID_9341 ) {
+		writeCommand( i ? ILI9341_INVERTON : ILI9341_INVERTOFF);
+		CS_IDLE;
+	}
 }
 /*****************************************************************************/
 // Pass 8-bit (each) R,G,B, get back 16-bit packed color
@@ -442,22 +437,21 @@ uint8_t read8_(void)
 {
   RD_ACTIVE;
   delayMicroseconds(10);
-  uint8_t temp = ( (TFT_DATA->regs->IDR>>TFT_DATA_NIBBLE) & 0x00FF);
-  delayMicroseconds(1);
+  uint8_t temp = ( (dataRegs->IDR>>TFT_DATA_SHIFT) & 0x00FF);
+  delayMicroseconds(10);
   RD_IDLE;
-  delayMicroseconds(1);
+  delayMicroseconds(10);
   return temp;
 }
 
 // speed optimization
-static void writeCommand(uint8_t c) __attribute__((always_inline, optimize("O0")));
+//static void writeCommand(uint8_t c) __attribute__((always_inline, optimize("O0")));
 /*****************************************************************************/
 //__attribute__(()
-static void writeCommand(uint8_t c) 
+inline void writeCommand(uint16_t c)
 {
-	CS_ACTIVE;
-	CD_COMMAND;
-	write8(0);
+	CS_ACTIVE_CD_COMMAND;
+	write8(c>>8);
 	write8(c);
 }
 
@@ -555,7 +549,7 @@ uint16_t readReg(uint8_t r)
 }
 
 /*****************************************************************************/
-void writeRegister8(uint8_t a, uint8_t d)
+void writeRegister8(uint16_t a, uint8_t d)
 {
   writeCommand(a);
   CD_DATA;
@@ -574,14 +568,14 @@ void writeRegister16(uint16_t a, uint16_t d)
 }
 
 /*****************************************************************************/
-void writeRegisterPair(uint8_t aH, uint8_t aL, uint16_t d)
+void writeRegisterPair(uint16_t aH, uint16_t aL, uint16_t d)
 {
   writeRegister8(aH, d>>8);
   writeRegister8(aL, d);
 }
 
 /*****************************************************************************/
-void writeRegister24(uint8_t r, uint32_t d)
+void writeRegister24(uint16_t r, uint32_t d)
 {
   writeCommand(r); // includes CS_ACTIVE
   CD_DATA;
@@ -592,7 +586,7 @@ void writeRegister24(uint8_t r, uint32_t d)
 }
 
 /*****************************************************************************/
-void writeRegister32(uint8_t r, uint32_t d)
+void writeRegister32(uint16_t r, uint32_t d)
 {
   writeCommand(r);
   CD_DATA;
@@ -602,3 +596,5 @@ void writeRegister32(uint8_t r, uint32_t d)
   write8(d);
   CS_IDLE;
 }
+
+//Adafruit_TFTLCD_8bit_STM32 TFT;

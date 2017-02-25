@@ -24,7 +24,7 @@
 #define ILI9341_VCOMCONTROL1      0xC5
 #define ILI9341_VCOMCONTROL2      0xC7
 #define ILI9341_MEMCONTROL      0x36
-#define ILI9341_MADCTL  0x36
+#define ILI9341_MADCTL			0x36
 
 #define ILI9341_MADCTL_MY  0x80
 #define ILI9341_MADCTL_MX  0x40
@@ -37,7 +37,7 @@
 
 /*****************************************************************************/
 extern void ili9341_begin(void);
-extern void ili9341_setAddrWindow(int x1, int y1, int x2, int y2);
+extern void ili9341_setAddrWindow(int16_t x1, int16_t y1, int16_t x2, int16_t y2);
 extern void ili9341_fillScreen(uint16_t color);
 extern void ili9341_drawPixel(int16_t x, int16_t y, uint16_t color);
 extern void ili9341_setRotation(uint8_t x);
