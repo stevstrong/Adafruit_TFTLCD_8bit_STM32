@@ -5,37 +5,34 @@
 #include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 
-
-// Assign human-readable names to some common 16-bit color values:
-#define	BLACK   0x0000
-#define	BLUE    0x001F
-#define	RED     0xF800
-#define	GREEN   0x07E0
-#define CYAN    0x07FF
-#define MAGENTA 0xF81F
-#define YELLOW  0xFFE0
-#define WHITE   0xFFFF
-
+/*
+extern Adafruit_TFTLCD_8bit_STM32 TFT;
+#define tft TFT
+*/
 Adafruit_TFTLCD_8bit_STM32 tft;
 
-
 void setup(void) {
-  Serial.begin(9600);
-  delay(6000);
+  Serial.begin(115200);
+  while ( !Serial.isConnected() ) ;
+  delay(1000);
+
   Serial.println(F("TFT LCD test"));
-/*
-#ifdef USE_ADAFRUIT_SHIELD_PINOUT
-  Serial.println(F("Using Adafruit 2.8\" TFT Arduino Shield Pinout"));
-#else
-  Serial.println(F("Using Adafruit 2.8\" TFT Breakout Board Pinout"));
-#endif
-*/
+
   Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
 
   tft.reset();
-
-  uint16_t identifier = tft.readID();
-
+/*
+  pinMode(PB2, OUTPUT);
+  while(1) {
+	digitalWrite(PB2, HIGH);
+	digitalWrite(PB2, LOW);
+  }
+  */
+  uint16_t identifier = 0x9341;
+/*
+do {
+  identifier = tft.readID();
+  if (identifier==0) identifier = 0x9341;
   if(identifier == 0x9325) {
     Serial.println(F("Found ILI9325 LCD driver"));
   } else if(identifier == 0x9328) {
@@ -49,18 +46,24 @@ void setup(void) {
   } else {
     Serial.print(F("\n*** Unknown LCD driver chip: "));
     Serial.println(identifier, HEX);
-    Serial.println(F("\nIf using the Adafruit 2.8\" TFT Arduino shield, the line:"));
-    Serial.println(F("  #define USE_ADAFRUIT_SHIELD_PINOUT"));
-    Serial.println(F("should appear in the library header (Adafruit_TFT.h)."));
-    Serial.println(F("If using the breakout board, it should NOT be #defined!"));
-    Serial.println(F("Also if using the breakout, double-check that all wiring"));
-    Serial.println(F("matches the tutorial."));
-    return;
+    //return;
+	//identifier = 0;
+	delay(1000);
   }
-//return;
+} while (identifier==0);
+*/
   tft.begin(identifier);
+  Serial.println("TFT begin done.");
+/*  tft.fillScreen(BLACK);
+  tft.fillRect(0,0,100,100,GREEN);
+  tft.fillRect(200,200,10,10,RED);
+  Serial.println("\nrect filled with blue.");
+while(1);*/
+}
 
-  Serial.println(F("Benchmark                Time (microseconds)"));
+void doTest(void)
+{
+  Serial.println(F("\nBenchmark                Time (microseconds)"));
 
   Serial.print(F("Screen fill              "));
   Serial.println(testFillScreen());
@@ -125,13 +128,14 @@ void setup(void) {
 
 void loop(void) {
   for(uint8_t rotation=0; rotation<4; rotation++) {
-	  Serial.print("ID: "); Serial.println(tft.readID(),HEX);
     tft.setRotation(rotation);
+	//Serial.print("ID: "); Serial.println(tft.readID(),HEX);
 	Serial.print("rotation: "); Serial.print(rotation);
-    Serial.print(", text runtime: ");
+    Serial.print(", runtime: ");
     Serial.println(testText());
-    delay(2000);
+    delay(1000);
   }
+  doTest();
 }
 
 unsigned long testFillScreen() {
@@ -318,7 +322,7 @@ unsigned long testTriangles() {
       cx    , cy - i, // peak
       cx - i, cy + i, // bottom left
       cx + i, cy + i, // bottom right
-      tft.color565(0, 0, i));
+      color565(0, 0, i));
   }
 
   return micros() - start;
@@ -334,10 +338,10 @@ unsigned long testFilledTriangles() {
   for(i=min(cx,cy); i>10; i-=5) {
     start = micros();
     tft.fillTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-      tft.color565(0, i, i));
+      color565(0, i, i));
     t += micros() - start;
     tft.drawTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-      tft.color565(i, i, 0));
+      color565(i, i, 0));
   }
 
   return t;
@@ -354,7 +358,7 @@ unsigned long testRoundRects() {
   start = micros();
   for(i=0; i<w; i+=6) {
     i2 = i / 2;
-    tft.drawRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(i, 0, 0));
+    tft.drawRoundRect(cx-i2, cy-i2, i, i, i/8, color565(i, 0, 0));
   }
 
   return micros() - start;
@@ -370,7 +374,7 @@ unsigned long testFilledRoundRects() {
   start = micros();
   for(i=min(tft.width(), tft.height()); i>20; i-=6) {
     i2 = i / 2;
-    tft.fillRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(0, i, 0));
+    tft.fillRoundRect(cx-i2, cy-i2, i, i, i/8, color565(0, i, 0));
   }
 
   return micros() - start;

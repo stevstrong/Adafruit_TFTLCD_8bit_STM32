@@ -59,7 +59,7 @@ void setup(void)
 {
 	Serial.begin(115200);
 	
-	delay(6000); // allow time for OS to enumerate USB as COM port
+	//delay(6000); // allow time for OS to enumerate USB as COM port
 	
 	Serial.print("\n*** Paint demo with easy touch calibration process ***\n");
 
@@ -105,14 +105,19 @@ do {
   tft.println("Press one corner...");
 	Serial.println("Calibrating the touch surface");
 	Serial.print("> please press one corner...");
+  tft.fillRect(244, 0, 5, 5, GREEN);
 	ts.calibratePoint();
+  tft.fillRect(244, 0, 5, 5, BLUE);
+  delay(1000);
   tft.println("Now press the opposite corner...");
 	Serial.print("ok.\n> and now press the diagonally opposite corner...");
+  tft.fillRect(0, 314, 5, 5, GREEN);
 	ts.calibratePoint();
   tft.setTextSize(2);
   tft.setCursor(0, 200);
   tft.println("Calibration done.");
 	Serial.println("ok.\nCalibration done.");
+  tft.fillRect(0, 314, 5, 5, BLUE);
 
 	delay(1000);
 
@@ -146,8 +151,8 @@ void loop()
 		digitalWrite(LED_PIN, LOW);
 		// the coordinates will be mapped to the set display ranges by using 'rangeSet()' in setup
 		// x, y (in pixels) can be directly used for display routines!
-
 		if (p.y < BOX_Y) {
+			// colour selection area
 			// recover old box frame
 			tft.drawRect(old_x, 0, BOX_X, BOX_Y, oldcolor);
 			// draw white box frame for the new colour
@@ -178,22 +183,23 @@ void loop()
 			}
 			tft.drawRect(current_x, 0, BOX_X, BOX_Y, (currentcolor^0xFFFF));
 			
+			if (p.dbl) {
+				// set background of the painting area with current colour
+				tft.fillRect(0, BOX_Y+PAINT_MARGIN, TFTWIDTH, TFTHEIGHT-BOX_Y-PAINT_MARGIN, currentcolor);
+				penradius = 3;
+			}
+
 			oldcolor = currentcolor;
 			old_x = current_x;
 
-		}
+		} else
 		// check point position, repetition and double click
 		if (((p.y-penradius) > (BOX_Y+PAINT_MARGIN)) && ((p.y+penradius) < tft.height())) {
 			// painting area
-			if (p.dbl) penradius = 3;
-			else if (penradius<p.repeat) penradius = p.repeat;
+			if (p.dbl) penradius = 3; // reset pen radius to default value
+			else if (penradius<p.repeat) penradius = p.repeat; // increase pen radius when repeat touching
+			
 			tft.fillCircle(p.x, p.y, penradius, currentcolor);
-		} else if ( p.y<BOX_Y ) {
-			// colour selection area
-			if (p.dbl) {
-				// fill the writing area with current colour
-				tft.fillRect(0, BOX_Y+PAINT_MARGIN, TFTWIDTH, TFTHEIGHT-BOX_Y-PAINT_MARGIN, currentcolor);
-			}
 		}
 		digitalWrite(LED_PIN, HIGH);
 	}
