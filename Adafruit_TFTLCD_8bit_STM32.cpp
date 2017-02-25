@@ -506,17 +506,17 @@ uint16_t Adafruit_TFTLCD_8bit_STM32::readID(void)
       }
     */
 /**/
-  if (readReg(0x04) == 0x8000) { // eh close enough
+  if (readReg32(0x04) == 0x8000) { // eh close enough
     // setc!
     writeRegister24(HX8357D_SETC, 0xFF8357);
     delay(300);
     //Serial.println(readReg(0xD0), HEX);
-    if (readReg(0xD0) == 0x990000) {
+    if (readReg32(0xD0) == 0x990000) {
       return 0x8357;
     }
   }
 
-  uint16_t id = readReg(0xD3);
+  uint16_t id = readReg32(0xD3);
   if (id != 0x9341) {
     id = readReg(0);
   }
@@ -525,12 +525,37 @@ uint16_t Adafruit_TFTLCD_8bit_STM32::readID(void)
 }
 
 /*****************************************************************************/
+uint32_t readReg32(uint8_t r)
+{
+  uint32_t id;
+  uint8_t x;
+
+  // try reading register #4
+  writeCommand(r);
+  setReadDir();  // Set up LCD data port(s) for READ operations
+  CD_DATA;
+  delayMicroseconds(50);
+  read8(x);
+  id = x;          // Do not merge or otherwise simplify
+  id <<= 8;              // these lines.  It's an unfortunate
+  read8(x);
+  id  |= x;        // shenanigans that are going on.
+  id <<= 8;              // these lines.  It's an unfortunate
+  read8(x);
+  id  |= x;        // shenanigans that are going on.
+  id <<= 8;              // these lines.  It's an unfortunate
+  read8(x);
+  id  |= x;        // shenanigans that are going on.
+  CS_IDLE;
+  setWriteDir();  // Restore LCD data port(s) to WRITE configuration
+  return id;
+}
+/*****************************************************************************/
 uint16_t readReg(uint8_t r)
 {
   uint16_t id;
   uint8_t x;
 
-  // try reading register #4
   writeCommand(r);
   setReadDir();  // Set up LCD data port(s) for READ operations
   CD_DATA;

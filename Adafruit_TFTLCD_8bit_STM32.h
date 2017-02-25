@@ -188,6 +188,7 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
 
 extern uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
 extern uint16_t readReg(uint8_t r);
+extern uint32_t readReg32(uint8_t r);
 extern void writeCommand(uint16_t c);
 extern void writeRegister8(uint16_t a, uint8_t d);
 extern void writeRegister16(uint16_t a, uint16_t d);
