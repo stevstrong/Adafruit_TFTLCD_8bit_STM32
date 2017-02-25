@@ -4,22 +4,22 @@
 // Graphics library by ladyada/adafruit with init code from Rossum
 // MIT license
 
-/* Graphic-test benchmark:
+/*
 
-Benchmark                Time (microseconds)
-Screen fill              63000
-Text                     20514
-Lines                    174196
-Horiz/Vert Lines         7606
-Rectangles (outline)     5960
-Rectangles (filled)      148724
-Circles (filled)         91860
-Circles (outline)        75255
-Triangles (outline)      55253
-Triangles (filled)       90589
-Rounded rects (outline)  27304
-Rounded rects (filled)   186664
-Done!
+Graphics-test Benchmark  Time (microseconds)
+--------------------------------------------
+Screen fill              62999
+Text                     20483
+Lines                    173830
+Horiz/Vert Lines         7604
+Rectangles (outline)     5958
+Rectangles (filled)      148717
+Circles (filled)         91783
+Circles (outline)        75096
+Triangles (outline)      55138
+Triangles (filled)       90553
+Rounded rects (outline)  27257
+Rounded rects (filled)   186639
 */
 
 #include "Adafruit_TFTLCD_8bit_STM32.h"
