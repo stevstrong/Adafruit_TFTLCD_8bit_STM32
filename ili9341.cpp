@@ -59,7 +59,7 @@ const uint8_t ILI9341_regValues_post[] =
 	0x33, 6, 0x00, 0x00, 0x01, 0x40, 0x00, 0x00,
 	0x37, 2, 0x00, 0x00,
 	0x13, 0,			// normaldisp
-	0x21, 0,			// invert off
+	ILI9341_INVERTOFF, 0,			// invert off
 };
 /*****************************************************************************/
 static void WriteCmdParamN(uint16_t cmd, int8_t N, const uint8_t * block)
@@ -106,7 +106,7 @@ const uint8_t wake_on[] = {
 	TFTLCD_DELAY8, 150,
 	0x29, 0,            //Display On
 	//additional settings
-	0x21, 0,			// invert off
+	ILI9341_INVERTOFF, 0,			// invert off
 	0x36, 1, 0x48,      //Memory Access
 	0xB0, 1, 0x40,      //RGB Signal [40] RCM=2
 };
