@@ -6,19 +6,12 @@
 #ifndef _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 #define _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 
-    #define PROGMEM
-    #define pgm_read_byte(addr) (*(const unsigned char *)(addr))
-    #define pgm_read_word(addr) (*(const unsigned short *)(addr))
 
-#if ARDUINO >= 100
- #include "Arduino.h"
-#else
- #include "WProgram.h"
-#endif
-
-#include <Adafruit_GFX.h>
+#include <Adafruit_GFX_AS.h>
 
 #include <libmaple/gpio.h>
+
+//#define USE_MAPLE_MINI_PINOUT // for use with maple mini
 
 /*****************************************************************************/
 // LCD controller chip identifiers
@@ -52,12 +45,28 @@
 /*****************************************************************************/
 // Define pins and Output Data Registers
 /*****************************************************************************/
-
+// Data port
 #define TFT_DATA_PORT	GPIOB
-// Port data bits D0..D7:
-// enable only one from below lines corresponding to your HW setup:
-#define TFT_DATA_LOW_NIBBLE	1 // take the lower 8 bits: 0..7
-//#define TFT_DATA_HIGH_NIBBLE	1 // take the higher 8 bits: 8..15
+// Data bits
+#define TFT_DATA_SHIFT 0 // take the lower bits 0..8
+//#define TFT_DATA_SHIFT 8 // take the higher bits 7..15
+
+#if 0
+//#warning "Using maple mini pinout"
+//Control pins |RD |WR |RS |CS |RST|
+#define TFT_CNTRL_PORT	GPIOA
+#define TFT_RD			PB11
+#define TFT_WR			PA10
+#define TFT_RS			PA9
+#define TFT_CS			PA8
+
+#define TFT_WR_MASK		BIT10 // digitalPinToBitMask(TFT_WR) // 
+#define TFT_RS_MASK		BIT9 // digitalPinToBitMask(TFT_RS) // 
+#define TFT_CS_MASK		BIT8 // digitalPinToBitMask(TFT_CS) // 
+
+#define TFT_RST			PB10
+
+#else
 
 //Control pins |RD |WR |RS |CS |RST|
 #define TFT_CNTRL_PORT	GPIOA
@@ -65,17 +74,20 @@
 #define TFT_WR			PA1
 #define TFT_RS			PA2
 #define TFT_CS			PA3
-#define TFT_RST			PB10 //PB0
 
 #define TFT_RD_MASK		BIT0 // digitalPinToBitMask(TFT_RD) // 
 #define TFT_WR_MASK		BIT1 // digitalPinToBitMask(TFT_WR) // 
 #define TFT_RS_MASK		BIT2 // digitalPinToBitMask(TFT_RS) // 
 #define TFT_CS_MASK		BIT3 // digitalPinToBitMask(TFT_CS) // 
 
-#if 0
-	// use old definition, standard bit toggling, low speed
+#define TFT_RST			PB10
+
+#endif // end of control pin configuration
+
 	#define RD_ACTIVE    digitalWrite(TFT_RD, LOW)
 	#define RD_IDLE      digitalWrite(TFT_RD, HIGH)
+#if 0
+	// use old definition, standard bit toggling, low speed
 	#define WR_ACTIVE    digitalWrite(TFT_WR, LOW)
 	#define WR_IDLE      digitalWrite(TFT_WR, HIGH)
 	#define CD_COMMAND   digitalWrite(TFT_RS, LOW)
@@ -86,8 +98,6 @@
 #else
 	// use fast bit toggling, very fast speed!
 extern gpio_reg_map * cntrlRegs;
-	#define RD_ACTIVE				{ cntrlRegs->BRR  = TFT_RD_MASK; }
-	#define RD_IDLE					{ cntrlRegs->BSRR = TFT_RD_MASK; }
 	#define WR_ACTIVE				{ cntrlRegs->BRR  = TFT_WR_MASK; }
 	#define WR_IDLE					{ cntrlRegs->BSRR = TFT_WR_MASK; }
 	#define CD_COMMAND				{ cntrlRegs->BRR  = TFT_RS_MASK; }
@@ -104,40 +114,56 @@ extern uint8_t read8_(void);
 
 extern gpio_reg_map * dataRegs;
 
-#if defined(TFT_DATA_LOW_NIBBLE)
+#if (TFT_DATA_SHIFT==0)
   //#warning "Using lower data nibble..."
 	// set the pins to input mode
 	#define setReadDir() ( dataRegs->CRL = 0x88888888 )	// set the lower 8 bits as input
-	//#define setReadDir() ( dataRegs->CRL = 0x44444444 )	// set the lower 8 bits as input floating
 	// set the pins to output mode
 	#define setWriteDir() ( dataRegs->CRL = 0x33333333 )	// set the lower 8 bits as output
-	#define TFT_DATA_SHIFT 0
-#elif defined(TFT_DATA_HIGH_NIBBLE)
+
+    // set pins to output the 8 bit value
+    #if 0 // slow write
+     inline void write8(uint8_t c) { /*Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(',');*/
+    					digitalWrite(PB0, (c&BIT0)?HIGH:LOW);
+    					digitalWrite(PB1, (c&BIT1)?HIGH:LOW);
+    					digitalWrite(PB2, (c&BIT2)?HIGH:LOW);
+    					digitalWrite(PB3, (c&BIT3)?HIGH:LOW);
+    					digitalWrite(PB4, (c&BIT4)?HIGH:LOW);
+    					digitalWrite(PB5, (c&BIT5)?HIGH:LOW);
+    					digitalWrite(PB6, (c&BIT6)?HIGH:LOW);
+    					digitalWrite(PB7, (c&BIT7)?HIGH:LOW);
+    					WR_STROBE; }
+    #else
+      #define write8(c) { dataRegs->BSRR = (uint32_t)(0x00FF0000 + ((c)&0xFF)); WR_STROBE; }
+      // inline void write8(uint8_t d) { dataRegs->BSRR = (uint32_t)(0x00FF0000 + d); WR_STROBE; };
+    #endif
+#elif (TFT_DATA_SHIFT==8)
   #warning "Using high data nibble..."
 	// set the pins to input mode
 	#define setReadDir() ( dataRegs->CRH = 0x88888888 )	// set the upper 8 bits as input
 	// set the pins to output mode
 	#define setWriteDir() ( dataRegs->CRH = 0x33333333 )	// set the lower 8 bits as output
-	#define TFT_DATA_SHIFT 8
+
+    // set pins to output the 8 bit value
+    #if 0 // slow write
+     inline void write8(uint8_t c) { /*Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(',');*/
+    					digitalWrite(PB8, (c&BIT0)?HIGH:LOW);
+    					digitalWrite(PB9, (c&BIT1)?HIGH:LOW);
+    					digitalWrite(PB10, (c&BIT2)?HIGH:LOW);
+    					digitalWrite(PB11, (c&BIT3)?HIGH:LOW);
+    					digitalWrite(PB12, (c&BIT4)?HIGH:LOW);
+    					digitalWrite(PB13, (c&BIT5)?HIGH:LOW);
+    					digitalWrite(PB14, (c&BIT6)?HIGH:LOW);
+    					digitalWrite(PB15, (c&BIT7)?HIGH:LOW);
+    					WR_STROBE; }
+    #else
+      #define write8(c) {  dataRegs->BSRR = (uint32_t)(0xFF000000 + (((c)&0xFF)<<TFT_DATA_SHIFT)); WR_STROBE; }
+      // inline void write8(uint8_t d) { dataRegs->BSRR = (uint32_t)(0x00FF0000 + d); WR_STROBE; };
+    #endif
+#else
+  #error Invalid data shift selected! Please set to '0' for low nibble, or to '8' for high nibble
 #endif
 
-// set pins to output the 8 bit value
-#if 0 // slow write
- #define write8(c) { Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(','); \
-					digitalWrite(PB0, (c&BIT0)?HIGH:LOW); \
-					digitalWrite(PB1, (c&BIT1)?HIGH:LOW); \
-					digitalWrite(PB2, (c&BIT2)?HIGH:LOW); \
-					digitalWrite(PB3, (c&BIT3)?HIGH:LOW); \
-					digitalWrite(PB4, (c&BIT4)?HIGH:LOW); \
-					digitalWrite(PB5, (c&BIT5)?HIGH:LOW); \
-					digitalWrite(PB6, (c&BIT6)?HIGH:LOW); \
-					digitalWrite(PB7, (c&BIT7)?HIGH:LOW); \
-					WR_STROBE; }
-#else
- #define write8(c) { uint32_t val = (((c^0x00FF)<<16) | c)<<TFT_DATA_SHIFT; \
-					/*Serial.print(" write8: "); Serial.print(val,HEX); Serial.write(',');*/ \
-					dataRegs->BSRR = val; WR_STROBE; }
-#endif
 
 /*****************************************************************************/
 
@@ -175,6 +201,15 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
 
   uint16_t readPixel(int16_t x, int16_t y),
            readID(void);
+/*****************************************************************************/
+// Pass 8-bit (each) R,G,B, get back 16-bit packed color
+// color coding on bits:
+// high byte sill be sent first
+// bit nr: 		15	14	13	12	11	 10	09	08		07	06	05	 04	03	02	01	00
+// color/bit:	R5	R4	R3	R2	R1 | G5	G4	G3		G2	G1	G0 | B5	B4	B3	B2	B1
+// 								R0=R5											B0=B5
+/*****************************************************************************/
+  uint16_t inline color565(uint8_t r, uint8_t g, uint8_t b) { return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3); }
 
  private:
 
@@ -186,7 +221,6 @@ class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {
   uint8_t  driver;
 };
 
-extern uint16_t color565(uint8_t r, uint8_t g, uint8_t b);
 extern uint16_t readReg(uint8_t r);
 extern uint32_t readReg32(uint8_t r);
 extern void writeCommand(uint16_t c);
@@ -194,8 +228,9 @@ extern void writeRegister8(uint16_t a, uint8_t d);
 extern void writeRegister16(uint16_t a, uint16_t d);
 extern void writeRegister24(uint16_t a, uint32_t d);
 extern void writeRegister32(uint16_t a, uint32_t d);
+//extern void writeRegister32(uint16_t a, uint16_t d1, uint16_t d2);
 extern void writeRegisterPair(uint16_t aH, uint16_t aL, uint16_t d);
 
-extern Adafruit_TFTLCD_8bit_STM32 TFT;
+extern Adafruit_TFTLCD_8bit_STM32 tft;
 
 #endif

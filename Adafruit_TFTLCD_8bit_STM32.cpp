@@ -27,6 +27,15 @@ void Adafruit_TFTLCD_8bit_STM32::begin(uint16_t id)
 {
 	reset();
 
+/*	// test routine for the port pins:
+	Serial.print("CR: "); Serial.println(dataRegs->CRL, HEX);
+	Serial.println("testing TFT data pins...");
+	uint8_t c = 0;
+	while(1) {
+		write8(c);
+		c++;
+	}
+*/
 	if ((id == 0x9325) || (id == 0x9328)) {
 		driver = ID_932X;
 		ili932x_begin();
@@ -292,7 +301,8 @@ void Adafruit_TFTLCD_8bit_STM32::drawPixel(int16_t x, int16_t y, uint16_t color)
     CD_COMMAND; write8(0x22); CD_DATA; write8(hi); write8(lo);
 
   } else if ((driver == ID_9341) || (driver == ID_HX8357D)) {
-    setAddrWindow(x, y, _width-1, _height-1);
+
+    setAddrWindow(x, y, x+1, y+1);
     writeRegister16(0x2C, color);
   }
 }
@@ -359,19 +369,6 @@ void Adafruit_TFTLCD_8bit_STM32::invertDisplay(boolean i)
 	}
 }
 /*****************************************************************************/
-// Pass 8-bit (each) R,G,B, get back 16-bit packed color
-// color coding on bits:
-// high byte sill be sent first
-// bit nr: 		15	14	13	12	11	 10	09	08		07	06	05	 04	03	02	01	00
-// color/bit:	R5	R4	R3	R2	R1 | G5	G4	G3		G2	G1	G0 | B5	B4	B3	B2	B1
-// 								R0=R5											B0=B5
-/*****************************************************************************/
-uint16_t color565(uint8_t r, uint8_t g, uint8_t b)
-{
-  return ((r & 0xF8) << 8) | ((g & 0xFC) << 3) | (b >> 3);
-}
-
-/*****************************************************************************/
 void Adafruit_TFTLCD_8bit_STM32::setRotation(uint8_t x)
 {
   // Call parent rotation func first -- sets up rotation flags, etc.
@@ -391,28 +388,32 @@ void Adafruit_TFTLCD_8bit_STM32::setRotation(uint8_t x)
    uint16_t t;
 
    switch (rotation) {
+   case 1:
+     t = ILI9341_MADCTL_MX | ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR;
+     break;
    case 2:
      t = ILI9341_MADCTL_MX | ILI9341_MADCTL_BGR;
      break;
    case 3:
      t = ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR;
      break;
-  case 0:
+   case 0:
+   default:
     t = ILI9341_MADCTL_MY | ILI9341_MADCTL_BGR;
     break;
-   case 1:
-     t = ILI9341_MADCTL_MX | ILI9341_MADCTL_MY | ILI9341_MADCTL_MV | ILI9341_MADCTL_BGR;
-     break;
   }
    writeRegister8(ILI9341_MADCTL, t ); // MADCTL
    // For 9341, init default full-screen address window:
-   setAddrWindow(0, 0, _width - 1, _height - 1); // CS_IDLE happens here
+   //setAddrWindow(0, 0, _width - 1, _height - 1); // CS_IDLE happens here
 
   } else if (driver == ID_HX8357D) {
     // MEME, HX8357D uses same registers as 9341 but different values
     uint16_t t;
     
     switch (rotation) {
+      case 1:
+        t = HX8357B_MADCTL_MY | HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
+        break;
       case 2:
         t = HX8357B_MADCTL_RGB;
         break;
@@ -420,10 +421,8 @@ void Adafruit_TFTLCD_8bit_STM32::setRotation(uint8_t x)
         t = HX8357B_MADCTL_MX | HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
         break;
       case 0:
+      default:
         t = HX8357B_MADCTL_MX | HX8357B_MADCTL_MY | HX8357B_MADCTL_RGB;
-        break;
-      case 1:
-        t = HX8357B_MADCTL_MY | HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
         break;
     }
     writeRegister8(ILI9341_MADCTL, t ); // MADCTL
@@ -444,10 +443,7 @@ uint8_t read8_(void)
   return temp;
 }
 
-// speed optimization
-//static void writeCommand(uint8_t c) __attribute__((always_inline, optimize("O0")));
 /*****************************************************************************/
-//__attribute__(()
 inline void writeCommand(uint16_t c)
 {
 	CS_ACTIVE_CD_COMMAND;
@@ -622,4 +618,16 @@ void writeRegister32(uint16_t r, uint32_t d)
   CS_IDLE;
 }
 
-//Adafruit_TFTLCD_8bit_STM32 TFT;
+/****************************************************************************
+void writeRegister32(uint16_t r, uint16_t d1, uint16_t d2)
+{
+  writeCommand(r);
+  CD_DATA;
+  write8(d1 >> 8);
+  write8(d1);
+  write8(d2 >> 8);
+  write8(d2);
+  CS_IDLE;
+}
+*/
+//Adafruit_TFTLCD_8bit_STM32 tft;

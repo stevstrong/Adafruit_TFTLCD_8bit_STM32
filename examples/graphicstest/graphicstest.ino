@@ -1,35 +1,35 @@
+#include <Arduino.h>
+
 // IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
 // CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
 // SEE RELEVANT COMMENTS IN Adafruit_TFTLCD.h FOR SETUP.
 
-#include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 
-/*
-extern Adafruit_TFTLCD_8bit_STM32 TFT;
-#define tft TFT
-*/
+
 Adafruit_TFTLCD_8bit_STM32 tft;
 
 void setup(void) {
   Serial.begin(115200);
-  while ( !Serial.isConnected() ) ;
+  while ( !Serial );
   delay(1000);
 
   Serial.println(F("TFT LCD test"));
 
   Serial.print("TFT size is "); Serial.print(tft.width()); Serial.print("x"); Serial.println(tft.height());
 
-  tft.reset();
 /*
   pinMode(PB2, OUTPUT);
   while(1) {
 	digitalWrite(PB2, HIGH);
 	digitalWrite(PB2, LOW);
   }
-  */
-  uint16_t identifier = 0x9341;
-/*
+*/
+  uint16_t identifier;
+#if 0
+  identifier = 0x9341;
+#else
+  tft.reset();
 do {
   identifier = tft.readID();
   if (identifier==0) identifier = 0x9341;
@@ -51,91 +51,10 @@ do {
 	delay(1000);
   }
 } while (identifier==0);
-*/
+#endif
+
   tft.begin(identifier);
   Serial.println("TFT begin done.");
-/*  tft.fillScreen(BLACK);
-  tft.fillRect(0,0,100,100,GREEN);
-  tft.fillRect(200,200,10,10,RED);
-  Serial.println("\nrect filled with blue.");
-while(1);*/
-}
-
-void doTest(void)
-{
-  Serial.println(F("\nBenchmark                Time (microseconds)"));
-
-  Serial.print(F("Screen fill              "));
-  Serial.println(testFillScreen());
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Text                     "));
-  Serial.println(testText());
-  delay(3000);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Lines                    "));
-  Serial.println(testLines(CYAN));
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Horiz/Vert Lines         "));
-  Serial.println(testFastLines(RED, BLUE));
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Rectangles (outline)     "));
-  Serial.println(testRects(GREEN));
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Rectangles (filled)      "));
-  Serial.println(testFilledRects(YELLOW, MAGENTA));
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Circles (filled)         "));
-  Serial.println(testFilledCircles(10, MAGENTA));
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Circles (outline)        "));
-  Serial.println(testCircles(10, WHITE));
-  delay(500);
-
- 	 //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Triangles (outline)      "));
-  Serial.println(testTriangles());
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Triangles (filled)       "));
-  Serial.println(testFilledTriangles());
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Rounded rects (outline)  "));
-  Serial.println(testRoundRects());
-  delay(500);
-
-	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-  Serial.print(F("Rounded rects (filled)   "));
-  Serial.println(testFilledRoundRects());
-  delay(500);
-
-  Serial.println(F("Done!"));
-}
-
-void loop(void) {
-  for(uint8_t rotation=0; rotation<4; rotation++) {
-    tft.setRotation(rotation);
-	//Serial.print("ID: "); Serial.println(tft.readID(),HEX);
-	Serial.print("rotation: "); Serial.print(rotation);
-    Serial.print(", runtime: ");
-    Serial.println(testText());
-    delay(1000);
-  }
-  doTest();
 }
 
 unsigned long testFillScreen() {
@@ -310,19 +229,18 @@ unsigned long testCircles(uint8_t radius, uint16_t color) {
 }
 
 unsigned long testTriangles() {
-  unsigned long start;
   int           n, i, cx = tft.width()  / 2 - 1,
                       cy = tft.height() / 2 - 1;
 
   tft.fillScreen(BLACK);
   n     = min(cx, cy);
-  start = micros();
+  unsigned long start = micros();
   for(i=0; i<n; i+=5) {
     tft.drawTriangle(
       cx    , cy - i, // peak
       cx - i, cy + i, // bottom left
       cx + i, cy + i, // bottom right
-      color565(0, 0, i));
+      tft.color565(0, 0, i));
   }
 
   return micros() - start;
@@ -338,10 +256,10 @@ unsigned long testFilledTriangles() {
   for(i=min(cx,cy); i>10; i-=5) {
     start = micros();
     tft.fillTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-      color565(0, i, i));
+      tft.color565(0, i, i));
     t += micros() - start;
     tft.drawTriangle(cx, cy - i, cx - i, cy + i, cx + i, cy + i,
-      color565(i, i, 0));
+      tft.color565(i, i, 0));
   }
 
   return t;
@@ -358,7 +276,7 @@ unsigned long testRoundRects() {
   start = micros();
   for(i=0; i<w; i+=6) {
     i2 = i / 2;
-    tft.drawRoundRect(cx-i2, cy-i2, i, i, i/8, color565(i, 0, 0));
+    tft.drawRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(i, 0, 0));
   }
 
   return micros() - start;
@@ -374,8 +292,87 @@ unsigned long testFilledRoundRects() {
   start = micros();
   for(i=min(tft.width(), tft.height()); i>20; i-=6) {
     i2 = i / 2;
-    tft.fillRoundRect(cx-i2, cy-i2, i, i, i/8, color565(0, i, 0));
+    tft.fillRoundRect(cx-i2, cy-i2, i, i, i/8, tft.color565(0, i, 0));
   }
 
   return micros() - start;
 }
+
+void doTest(void)
+{
+  Serial.println(F("\nBenchmark                Time (microseconds)"));
+
+  Serial.print(F("Screen fill              "));
+  Serial.println(testFillScreen());
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Text                     "));
+  Serial.println(testText());
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Lines                    "));
+  Serial.println(testLines(CYAN));
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Horiz/Vert Lines         "));
+  Serial.println(testFastLines(RED, BLUE));
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Rectangles (outline)     "));
+  Serial.println(testRects(GREEN));
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Rectangles (filled)      "));
+  Serial.println(testFilledRects(YELLOW, MAGENTA));
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Circles (filled)         "));
+  Serial.println(testFilledCircles(10, MAGENTA));
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Circles (outline)        "));
+  Serial.println(testCircles(10, WHITE));
+  delay(500);
+
+ 	 //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Triangles (outline)      "));
+  Serial.println(testTriangles());
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Triangles (filled)       "));
+  Serial.println(testFilledTriangles());
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Rounded rects (outline)  "));
+  Serial.println(testRoundRects());
+  delay(500);
+
+	  //Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+  Serial.print(F("Rounded rects (filled)   "));
+  Serial.println(testFilledRoundRects());
+  delay(500);
+
+  Serial.println(F("Done!"));
+}
+
+void loop(void) {
+  for(uint8_t rotation=0; rotation<4; rotation++) {
+    tft.setRotation(rotation);
+	//Serial.print("ID: "); Serial.println(tft.readID(),HEX);
+	Serial.print("rotation: "); Serial.print(rotation);
+    Serial.print(", runtime: ");
+    Serial.println(testText());
+    delay(1000);
+  }
+  doTest();
+}
+
+

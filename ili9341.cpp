@@ -23,9 +23,8 @@ Rounded rects (filled)   186639
 */
 
 #include "Adafruit_TFTLCD_8bit_STM32.h"
-//#include "pin_magic.h"
-
 #include "ili9341.h"
+
 /**/
 #define TFTLCD_DELAY8 0xFF
 
@@ -121,9 +120,8 @@ void ili9341_begin(void)
 }
 
 /*****************************************************************************/
-// Sets the LCD address window (and address counter, on 932X).
-// Relevant to rect/screen fills and H/V lines.  Input coordinates are
-// assumed pre-sorted (e.g. x2 >= x1).
+// Sets the LCD address window. Relevant to all write routines.
+// Input coordinates are assumed pre-sorted (e.g. x2 >= x1).
 /*****************************************************************************/
 void ili9341_setAddrWindow(int16_t x1, int16_t y1, int16_t x2, int16_t y2)
 {
@@ -149,4 +147,5 @@ void ili9341_setRotation(uint8_t x)
 /*****************************************************************************/
 uint16_t ili9341_readPixel(int16_t x, int16_t y)
 {
+	return 0;
 }
