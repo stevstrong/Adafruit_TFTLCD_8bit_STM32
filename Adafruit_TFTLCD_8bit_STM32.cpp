@@ -46,6 +46,10 @@ void Adafruit_TFTLCD_8bit_STM32::begin(uint16_t id)
 		// HX8357D
 		driver = ID_HX8357D;
 		hx8357x_begin();
+	} else if (id == 0x9338) {
+		// ILI9338?
+		driver = ID_9338;
+		hx8357x_begin();
 	} else if(id == 0x7575) {
 		driver = ID_7575;
 		hx8347g_begin();
@@ -107,7 +111,7 @@ void Adafruit_TFTLCD_8bit_STM32::setAddrWindow(int16_t x1, int16_t y1, int16_t x
 		ili932x_setAddrWindow(x1, y1, x2, y2);
 	} else if(driver == ID_7575) {
 		hx8347g_setAddrWindow(x1, y1, x2, y2);
-	} else if ((driver == ID_9341) || (driver == ID_HX8357D)){
+	} else if ((driver == ID_9341) || (driver == ID_HX8357D) || (driver == ID_9338)){
 		ili9341_setAddrWindow(x1, y1, x2, y2);
 	}
 }
@@ -128,7 +132,7 @@ void Adafruit_TFTLCD_8bit_STM32::flood(uint16_t color, uint32_t len)
     writeCommand(ILI9341_MEMORYWRITE); // 16 bit
   } else if (driver == ID_932X) {
     writeCommand(ILI932X_RW_GRAM); // 16 bit
-  } else if (driver == ID_HX8357D) {
+  } else if (driver == ID_HX8357D || driver == ID_9338) {
     write8(HX8357_RAMWR);
   } else {
     write8(0x22); // Write data to GRAM
@@ -264,7 +268,7 @@ void Adafruit_TFTLCD_8bit_STM32::fillScreen(uint16_t color)
     // screen rotation because some users find it disconcerting when a
     // fill does not occur top-to-bottom.
 	ili932x_fillScreen(color);
-  } else if ((driver == ID_9341) || (driver == ID_7575) || (driver == ID_HX8357D)) {
+  } else if ((driver == ID_9341) || (driver == ID_7575) || (driver == ID_HX8357D) || (driver == ID_9338)) {
     // For these, there is no settable address pointer, instead the
     // address window must be set for each drawing operation.  However,
     // this display takes rotation into account for the parameters, no
@@ -300,7 +304,7 @@ void Adafruit_TFTLCD_8bit_STM32::drawPixel(int16_t x, int16_t y, uint16_t color)
     hi = color >> 8; lo = color;
     CD_COMMAND; write8(0x22); CD_DATA; write8(hi); write8(lo);
 
-  } else if ((driver == ID_9341) || (driver == ID_HX8357D)) {
+  } else if ((driver == ID_9341) || (driver == ID_HX8357D) || (driver == ID_9338)) {
 
     setAddrWindow(x, y, x+1, y+1);
     writeRegister16(0x2C, color);
@@ -342,7 +346,7 @@ void Adafruit_TFTLCD_8bit_STM32::pushColors(uint16_t *data, int16_t len, boolean
   if(first == true) { // Issue GRAM write command only on first call
     CD_COMMAND;
     if(driver == ID_932X) write8(0x00);
-    if ((driver == ID_9341) || (driver == ID_HX8357D)){
+    if ((driver == ID_9341) || (driver == ID_HX8357D) || (driver == ID_9338)){
        write8(0x2C);
      }  else {
        write8(0x22);
@@ -409,7 +413,7 @@ void Adafruit_TFTLCD_8bit_STM32::setRotation(uint8_t x)
   } else if (driver == ID_HX8357D) {
     // MEME, HX8357D uses same registers as 9341 but different values
     uint16_t t;
-    
+
     switch (rotation) {
       case 1:
         t = HX8357B_MADCTL_MY | HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
@@ -423,6 +427,28 @@ void Adafruit_TFTLCD_8bit_STM32::setRotation(uint8_t x)
       case 0:
       default:
         t = HX8357B_MADCTL_MX | HX8357B_MADCTL_MY | HX8357B_MADCTL_RGB;
+        break;
+    }
+    writeRegister8(ILI9341_MADCTL, t ); // MADCTL
+    // For 8357, init default full-screen address window:
+    setAddrWindow(0, 0, _width - 1, _height - 1); // CS_IDLE happens here
+  } else if (driver == ID_9338) {
+    // Like HX8357D, but mirrored
+    uint16_t t;
+    
+    switch (rotation) {
+      case 1:
+        t = HX8357B_MADCTL_MY | HX8357B_MADCTL_MX | HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
+        break;
+      case 2:
+        t = HX8357B_MADCTL_MY | HX8357B_MADCTL_RGB;
+        break;
+      case 3:
+        t = HX8357B_MADCTL_MV | HX8357B_MADCTL_RGB;
+        break;
+      case 0:
+      default:
+        t = HX8357B_MADCTL_MH | HX8357B_MADCTL_MX | HX8357B_MADCTL_RGB;
         break;
     }
     writeRegister8(ILI9341_MADCTL, t ); // MADCTL
@@ -513,7 +539,7 @@ uint16_t Adafruit_TFTLCD_8bit_STM32::readID(void)
   }
 
   uint16_t id = readReg32(0xD3);
-  if (id != 0x9341) {
+  if (id != 0x9341 && id != 0x9338) {
     id = readReg(0);
   }
 	//Serial.print("ID: "); Serial.println(id,HEX);
