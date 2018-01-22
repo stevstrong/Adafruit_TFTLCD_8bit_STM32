@@ -212,7 +212,7 @@ void initiateGame(void)
   // Ground
   drawGround();
   // Text
-   myGLCD.setTextColor(BLACK, color565(221, 216, 148));
+   myGLCD.setTextColor(BLACK, myGLCD.color565(221, 216, 148));
   myGLCD.setTextSize(2);
   myGLCD.setCursor(5,220);
   myGLCD.print("Score:");
@@ -320,7 +320,7 @@ void drawGround(void)
 	myGLCD.drawFastHLine(0, BOTTOM_AREA_Y+8, TFTHEIGHT, (int)bottom_deco[6]); // the dark green
 	myGLCD.drawFastHLine(0, BOTTOM_AREA_Y+9, TFTHEIGHT, (int)bottom_deco[0]);
 	// text area
-	myGLCD.fillRect(0, BOTTOM_AREA_Y+10, TFTHEIGHT, TFTWIDTH-(BOTTOM_AREA_Y+10), color565(221,216,148));
+	myGLCD.fillRect(0, BOTTOM_AREA_Y+10, TFTHEIGHT, TFTWIDTH-(BOTTOM_AREA_Y+10), myGLCD.color565(221,216,148));
 }
 /*****************************************************************************/
 // ===== drawPlillars - Custom Function
@@ -360,7 +360,7 @@ void drawPilars(int x, int y)
 void drawScore(void)
 {  // Draws the score
 	myGLCD.setTextSize(2);
-	myGLCD.setTextColor(BLACK, color565(221, 216, 148));
+	myGLCD.setTextColor(BLACK, myGLCD.color565(221, 216, 148));
 	myGLCD.setCursor(90, 220);
 	myGLCD.print(score);
 	myGLCD.setCursor(260, 220);
