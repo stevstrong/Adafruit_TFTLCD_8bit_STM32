@@ -3,8 +3,7 @@
 // If using an Arduino Mega make sure to use its hardware SPI pins, OR make
 // sure the SD library is configured for 'soft' SPI in the file Sd2Card.h.
 
-#include <Adafruit_GFX.h>    // Core graphics library
-#include <Adafruit_TFTLCD.h> // Hardware-specific library
+#include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 #include <SD.h>
 #include <SPI.h>
 

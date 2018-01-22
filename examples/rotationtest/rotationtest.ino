@@ -2,7 +2,6 @@
 // CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
 // SEE RELEVANT COMMENTS IN Adafruit_TFTLCD.h FOR SETUP.
 
-#include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 
 // check the pin connections in the header file.
