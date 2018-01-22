@@ -4,10 +4,7 @@
 
 // See <Adafruit_TFTLCD_8bit_STM32.h> for connection details of the display. Use hardware SPI pins for SPI
 
-// For Arduino Uno/Duemilanove, etc
-//  connect the SD card with DI going to pin 11, DO going to pin 12 and SCK going to pin 13 (standard)
-//  Then pin 10 goes to CS (or whatever you have set up)
-#define SD_CS 10     // Set the chip select line to whatever you use (10 doesnt conflict with the library)
+#define SD_CS PA4     // Set the chip select line to whatever you use
 
 // In the SD card, place 24 bit color BMP files (be sure they are 24-bit!)
 // There are examples in the sketch folder
