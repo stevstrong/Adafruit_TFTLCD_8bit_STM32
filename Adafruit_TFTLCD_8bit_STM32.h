@@ -4,7 +4,7 @@
 #ifndef _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 #define _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 
-#include <Adafruit_GFX_AS.h>
+#include <Adafruit_GFX.h>
 
 #include <libmaple/gpio.h>
 

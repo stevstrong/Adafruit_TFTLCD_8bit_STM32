@@ -1,4 +1,3 @@
-#include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 
 // check the pin connections in the header file.

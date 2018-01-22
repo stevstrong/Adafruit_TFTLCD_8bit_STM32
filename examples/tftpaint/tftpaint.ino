@@ -4,7 +4,6 @@
 // Uses double click/touch to clear the background in selected colour.
 // Uses double click/touch to set paint radius back to original value.
 
-#include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 #include <TouchScreen_STM32.h>
 
