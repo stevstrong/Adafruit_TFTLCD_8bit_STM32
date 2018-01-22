@@ -1,9 +1,5 @@
 #include <Arduino.h>
 
-// IMPORTANT: Adafruit_TFTLCD LIBRARY MUST BE SPECIFICALLY
-// CONFIGURED FOR EITHER THE TFT SHIELD OR THE BREAKOUT BOARD.
-// SEE RELEVANT COMMENTS IN Adafruit_TFTLCD.h FOR SETUP.
-
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 
 
