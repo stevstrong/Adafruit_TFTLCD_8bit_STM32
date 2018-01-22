@@ -1,17 +1,37 @@
-// IMPORTANT: SEE COMMENTS @ LINE 15 REGARDING SHIELD VS BREAKOUT BOARD USAGE.
-
 // Graphics library by ladyada/adafruit with init code from Rossum
 // MIT license
 
 #ifndef _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 #define _ADAFRUIT_TFTLCD_8BIT_STM32_H_
 
-
 #include <Adafruit_GFX.h>
 
 #include <libmaple/gpio.h>
 
-//#define USE_MAPLE_MINI_PINOUT // for use with maple mini
+/*****************************************************************************/
+// Define pins and Output Data Registers
+/*****************************************************************************/
+// Data port
+#define TFT_DATA_PORT	GPIOB
+// Data bits/pins
+#define TFT_DATA_SHIFT 0 // take the lower bits/pins 0..7
+//#define TFT_DATA_SHIFT 8 // take the higher bits/pins 8..15
+
+//Control pins |RD |WR |RS |CS |RST|
+#define TFT_CNTRL_PORT	GPIOA
+#define TFT_RD			PA0
+#define TFT_WR			PA1
+#define TFT_RS			PA2
+#define TFT_CS			PA3
+
+#define TFT_RD_MASK		BIT0 // digitalPinToBitMask(TFT_RD) // 
+#define TFT_WR_MASK		BIT1 // digitalPinToBitMask(TFT_WR) // 
+#define TFT_RS_MASK		BIT2 // digitalPinToBitMask(TFT_RS) // 
+#define TFT_CS_MASK		BIT3 // digitalPinToBitMask(TFT_CS) // 
+
+#define TFT_RST			PB10
+
+#define SLOW_WRITE 0   // set to 1 for legacy slow write (using individual digitalWrite()s
 
 /*****************************************************************************/
 // LCD controller chip identifiers
@@ -43,51 +63,11 @@
 #define MAGENTA 0xF81F
 #define YELLOW  0xFFE0
 #define WHITE   0xFFFF
-/*****************************************************************************/
-// Define pins and Output Data Registers
-/*****************************************************************************/
-// Data port
-#define TFT_DATA_PORT	GPIOB
-// Data bits
-#define TFT_DATA_SHIFT 0 // take the lower bits 0..8
-//#define TFT_DATA_SHIFT 8 // take the higher bits 7..15
 
-#if 0
-//#warning "Using maple mini pinout"
-//Control pins |RD |WR |RS |CS |RST|
-#define TFT_CNTRL_PORT	GPIOA
-#define TFT_RD			PB11
-#define TFT_WR			PA10
-#define TFT_RS			PA9
-#define TFT_CS			PA8
-
-#define TFT_WR_MASK		BIT10 // digitalPinToBitMask(TFT_WR) // 
-#define TFT_RS_MASK		BIT9 // digitalPinToBitMask(TFT_RS) // 
-#define TFT_CS_MASK		BIT8 // digitalPinToBitMask(TFT_CS) // 
-
-#define TFT_RST			PB10
-
-#else
-
-//Control pins |RD |WR |RS |CS |RST|
-#define TFT_CNTRL_PORT	GPIOA
-#define TFT_RD			PA0
-#define TFT_WR			PA1
-#define TFT_RS			PA2
-#define TFT_CS			PA3
-
-#define TFT_RD_MASK		BIT0 // digitalPinToBitMask(TFT_RD) // 
-#define TFT_WR_MASK		BIT1 // digitalPinToBitMask(TFT_WR) // 
-#define TFT_RS_MASK		BIT2 // digitalPinToBitMask(TFT_RS) // 
-#define TFT_CS_MASK		BIT3 // digitalPinToBitMask(TFT_CS) // 
-
-#define TFT_RST			PB10
-
-#endif // end of control pin configuration
 
 	#define RD_ACTIVE    digitalWrite(TFT_RD, LOW)
 	#define RD_IDLE      digitalWrite(TFT_RD, HIGH)
-#if 0
+#if SLOW_WRITE
 	// use old definition, standard bit toggling, low speed
 	#define WR_ACTIVE    digitalWrite(TFT_WR, LOW)
 	#define WR_IDLE      digitalWrite(TFT_WR, HIGH)
@@ -123,7 +103,7 @@ extern gpio_reg_map * dataRegs;
 	#define setWriteDir() ( dataRegs->CRL = 0x33333333 )	// set the lower 8 bits as output
 
     // set pins to output the 8 bit value
-    #if 0 // slow write
+    #if SLOW_WRITE
      inline void write8(uint8_t c) { /*Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(',');*/
     					digitalWrite(PB0, (c&BIT0)?HIGH:LOW);
     					digitalWrite(PB1, (c&BIT1)?HIGH:LOW);
@@ -146,7 +126,7 @@ extern gpio_reg_map * dataRegs;
 	#define setWriteDir() ( dataRegs->CRH = 0x33333333 )	// set the lower 8 bits as output
 
     // set pins to output the 8 bit value
-    #if 0 // slow write
+    #if SLOW_WRITE
      inline void write8(uint8_t c) { /*Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(',');*/
     					digitalWrite(PB8, (c&BIT0)?HIGH:LOW);
     					digitalWrite(PB9, (c&BIT1)?HIGH:LOW);
@@ -169,12 +149,6 @@ extern gpio_reg_map * dataRegs;
 /*****************************************************************************/
 
 #define swap(a, b) { int16_t t = a; a = b; b = t; }
-
-/*****************************************************************************/
-// **** IF USING THE LCD BREAKOUT BOARD, COMMENT OUT THIS NEXT LINE. ****
-// **** IF USING THE LCD SHIELD, LEAVE THE LINE ENABLED:             ****
-
-//#define USE_ADAFRUIT_SHIELD_PINOUT 1
 
 /*****************************************************************************/
 class Adafruit_TFTLCD_8bit_STM32 : public Adafruit_GFX {

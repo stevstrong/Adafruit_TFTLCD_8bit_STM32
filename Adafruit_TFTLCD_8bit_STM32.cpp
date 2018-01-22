@@ -1,6 +1,3 @@
-// IMPORTANT: LIBRARY MUST BE SPECIFICALLY CONFIGURED FOR EITHER TFT SHIELD
-// OR BREAKOUT BOARD USAGE.  SEE RELEVANT COMMENTS IN Adafruit_TFTLCD_8bit_STM32.h
-
 // Graphics library by ladyada/adafruit with init code from Rossum
 // MIT license
 
@@ -15,7 +12,7 @@ gpio_reg_map * cntrlRegs;
 gpio_reg_map * dataRegs;
 
 /*****************************************************************************/
-// Constructor for shield (fixed LCD control lines)
+// Constructor
 /*****************************************************************************/
 Adafruit_TFTLCD_8bit_STM32 :: Adafruit_TFTLCD_8bit_STM32(void)
 : Adafruit_GFX(TFTWIDTH, TFTHEIGHT)
