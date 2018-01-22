@@ -126,7 +126,7 @@ extern gpio_reg_map * dataRegs;
 	#define setWriteDir() ( dataRegs->CRH = 0x33333333 )	// set the lower 8 bits as output
 
     // set pins to output the 8 bit value
-    #if #if SLOW_WRITE
+    #if SLOW_WRITE
      inline void write8(uint8_t c) { /*Serial.print(" write8: "); Serial.print(c,HEX); Serial.write(',');*/
     					digitalWrite(PB8, (c&BIT0)?HIGH:LOW);
     					digitalWrite(PB9, (c&BIT1)?HIGH:LOW);
