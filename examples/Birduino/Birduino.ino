@@ -14,7 +14,6 @@
 #include <EEPROM.h>
 */
 
-#include <Adafruit_GFX.h>    // Core graphics library
 #include <Adafruit_TFTLCD_8bit_STM32.h> // Hardware-specific library
 #include <TouchScreen_STM32.h>
 

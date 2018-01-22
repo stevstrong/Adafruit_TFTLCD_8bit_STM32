@@ -8,4 +8,4 @@ Contribution from users for other display control types is welcome and made easy
 How to use:
 - Place the Adafruit_TFT library folder your <arduinosketchfolder>/libraries/ folder. You may need to create the libraries subfolder if its your first library. Restart the IDE.
 
-- Also requires the Adafruit_GFX library for Arduino. https://github.com/adafruit/Adafruit-GFX-Library
+- Also requires the Adafruit_GFX library for Arduino. https://github.com/adafruit/Adafruit-GFX-Library . Alternatively, you can change Adafruit_TFTLCD_8bit_STM32.h to #include <Adafruit_GFX_AS.h>, instead.
