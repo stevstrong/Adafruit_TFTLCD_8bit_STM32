@@ -135,4 +135,5 @@ void hx8347g_setRotation(uint8_t x)
 /*****************************************************************************/
 uint16_t hx8347g_readPixel(int16_t x, int16_t y)
 {
+    return 0;
 }
