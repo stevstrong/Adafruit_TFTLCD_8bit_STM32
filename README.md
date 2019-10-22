@@ -1,5 +1,11 @@
 This is a library for the 8 bit parallel driven TFT displays, ported from the Adafruit library [https://github.com/adafruit/TFTLCD-Library] and adapted to STM32F103Cx controller. No other CPU architecture is supportted at the moment.
 
+This library depends on the Libmaple core files from:
+
+https://github.com/stevstrong/Arduino_STM32 or
+
+https://github.com/rogerclarkmelbourne/Arduino_STM32.
+
 The scope of this library is to achieve highest display update rate while maintaing the compatibility with original Adafruit display API.
 Only tested with ILI9328 and "unknown" ILI9341-compatitble driver chips.
 
